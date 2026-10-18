@@ -1,0 +1,14 @@
+{
+  "display_name": "Xiaoqing Agent · 小晴自主行为",
+  "loading_order": 100,
+  "js": "index.js",
+  "css": "ui/style.css",
+  "author": "Project 小晴 contributors",
+  "version": "0.5.0",
+  "generate_interceptor": "xiaoqingAgentInterceptGeneration",
+  "minimum_client_version": "1.19.0",
+  "dependencies": [],
+  "auto_update": false,
+  "hooks": { "activate": "activate", "disable": "disable" }
+}
+
