@@ -1,0 +1,73 @@
+<div id="xiaoqing-agent-settings" class="xiaoqing-panel">
+  <div class="inline-drawer">
+    <div class="inline-drawer-toggle inline-drawer-header">
+      <b>Xiaoqing Agent · 小晴 v0.5.0 Beta · 自然等待</b>
+      <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
+    </div>
+    <div class="inline-drawer-content">
+      <p class="xq-hint">依据当前角色卡自主选择联系、等待或沉默。启用后，从下一条新用户消息开始计时；检查会使用当前模型连接并可能产生 API 费用。</p>
+      <label class="checkbox_label"><input type="checkbox" data-setting="enabled"><span>启用小晴插件</span></label>
+      <label class="checkbox_label"><input type="checkbox" data-setting="dualPhaseEnabled"><span>快慢两阶段互动（纯聊天与场景均生效）</span></label>
+      <label>快阶段 / 单阶段快测间隔（秒，1–3600）<input class="text_pole" type="number" min="1" max="3600" data-setting="fastTestSeconds"></label>
+      <label class="checkbox_label"><input type="checkbox" data-setting="adaptiveWaitEnabled"><span>自然等待：尊重等待建议，连续空等时减少检查</span></label>
+      <div class="xq-grid">
+        <label>快速 WAIT 最长间隔（秒）<input class="text_pole" type="number" min="1" max="3600" data-setting="fastWaitMaxSeconds"></label>
+        <label>慢速 WAIT 最长间隔（分钟）<input class="text_pole" type="number" min="1" max="1440" data-setting="quietWaitMaxMinutes"></label>
+        <label>连续空等延长倍率（1–4）<input class="text_pole" type="number" min="1" max="4" data-setting="quietWaitFactor"></label>
+        <label>整轮自主判断请求上限（含失败）<input class="text_pole" type="number" min="1" max="1000" data-setting="maxDecisionCalls"></label>
+      </div>
+      <p class="xq-hint">自然等待默认开启，空等越多，检查越稀疏；有可见输出、进入慢阶段或收到新消息后重新计算。最大间隔不会小于最短间隔。请求上限与输出上限分别生效，快慢阶段及同源标签页共用整轮自主判断额度，短期接话使用自身最多三次判断的限制。关闭自然等待可恢复固定快测间隔。</p>
+      <div class="xq-grid">
+        <label>慢阶段沉默门槛（分钟）<input class="text_pole" type="number" min="1" max="1440" data-setting="slowStartMinutes"></label>
+        <label>快阶段最长运行（分钟）<input class="text_pole" type="number" min="1" max="60" data-setting="fastPhaseMaxMinutes"></label>
+      </div>
+      <p class="xq-hint" id="xq-dual-phase-hint">先以设定的快阶段间隔延续互动；快阶段收尾且有效沉默达到门槛后，才进入慢阶段重新判断。默认门槛 5 分钟，可自行调整，时间暂停期间不计时。慢阶段承接已有剧情，使用下方可调分钟间隔和独立的同角色联系冷却；不会到点强制发消息。快慢阶段共用整轮额度，AI 可提前结束，无需用满。快阶段已用完总额度时整轮停止，不补发慢阶段。每次判断都需要模型生成时间。</p>
+      <label class="checkbox_label"><input type="checkbox" data-setting="fastTestEnabled"><span>单阶段快速测试（关闭两阶段后可用）</span></label>
+      <p class="xq-hint" id="xq-fast-test-hint">单阶段快测将首次检查、对白冷却和失败重试压缩为上面的秒数，每轮最多运行 5 分钟；WAIT 可按自然等待配置延长。关闭快测恢复保存的分钟设置。两阶段开启时由两阶段节奏接管。连续消息缓冲仍使用自己的秒数，暂停与免打扰照常生效。</p>
+      <label class="checkbox_label"><input type="checkbox" data-setting="bufferEnabled"><span>连续消息缓冲：先等我说完，再判断是否接话</span></label>
+      <label>停止发送后先等几秒（2–60 秒）<input class="text_pole" type="number" min="2" max="60" data-setting="bufferSeconds"></label>
+      <p class="xq-hint">默认等 5 秒，继续发送或输入会重新计时。输入框里有未发送的草稿时先不回复。模型还可以选择继续等一会。关闭缓冲或暂停插件后，恢复酒馆原本的即时回复。</p>
+      <label class="checkbox_label"><input type="checkbox" data-setting="allowSend"><span>允许角色主动发送消息（需单独开启）</span></label>
+      <label class="checkbox_label"><input type="checkbox" data-setting="paused"><span>暂停小晴插件</span></label>
+      <label class="checkbox_label"><input type="checkbox" id="xq-character-enabled"><span>允许当前角色参与</span></label>
+      <label for="xq-interaction-mode">当前聊天的互动模式</label>
+      <select class="text_pole" id="xq-interaction-mode">
+        <option value="chat">纯聊天</option>
+        <option value="scene">场景角色扮演（有动作就展示）</option>
+      </select>
+      <p class="xq-hint" id="xq-scene-hint" hidden>根据角色卡与当前剧情决定是否有新的可见行动，有动作就写出旁白，也可同时说话。WAIT 可以没有新动作，安静等待不写聊天、不占次数；END 可以提前收尾，不需要用满额度或刻意找事做。旁白供玩家阅读，不代表你扮演的角色自动知情。每条自主消息都占整轮次数，纯旁白也算，动作与对白合在一条只算一次。旁白不受对白冷却限制；对白仍需开启主动发送。选中此模式即允许场景旁白，仍需启用插件。只对当前聊天保存。</p>
+      <div class="xq-grid">
+        <label>单阶段分钟模式首次检查（分钟）<input class="text_pole" type="number" min="1" max="1440" data-setting="firstCheckMinutes"></label>
+        <label>整轮最长等待（分钟）<input class="text_pole" type="number" min="1" max="10080" data-setting="maxWaitMinutes"></label>
+        <label>慢阶段 / 分钟模式最短间隔（分钟）<input class="text_pole" type="number" min="1" max="1440" data-setting="minCheckMinutes"></label>
+        <label>读取最近消息数<input class="text_pole" type="number" min="1" max="100" data-setting="recentMessages"></label>
+        <label>整轮主动消息上限（1–100，默认 5，含旁白）<input class="text_pole" type="number" min="1" max="100" data-setting="maxMessages"></label>
+        <label>慢阶段 / 分钟模式同角色联系间隔（分钟）<input class="text_pole" type="number" min="1" max="1440" data-setting="contactGapMinutes"></label>
+        <label>失败重试上限<input class="text_pole" type="number" min="0" max="2" data-setting="maxRetries"></label>
+        <label>请求超时（秒）<input class="text_pole" type="number" min="10" max="300" data-setting="timeoutSeconds"></label>
+      </div>
+      <p class="xq-hint">整轮指同一次用户沉默，快慢阶段共用额度，正常接话不计。达到上限后停止，刷新、切换模式或清记录不会退还次数；发送新消息才开始新一轮。已有设置会保留，请检查消息上限是否为你需要的值。</p>
+      <label class="checkbox_label"><input type="checkbox" data-setting="saveMemory"><span>保存角色模拟状态与待定意图</span></label>
+      <label class="checkbox_label"><input type="checkbox" data-setting="debug"><span>调试日志（不记录模型原文）</span></label>
+      <label class="checkbox_label"><input type="checkbox" data-setting="dndEnabled"><span>启用免打扰（浏览器本地时区，期间不调用模型、不发消息）</span></label>
+      <div class="xq-grid">
+        <label>免打扰开始<input class="text_pole" type="time" data-setting="dndStart"></label>
+        <label>免打扰结束<input class="text_pole" type="time" data-setting="dndEnd"></label>
+      </div>
+      <p class="xq-hint">起止时间相同表示全天免打扰。关闭保存会清除当前聊天的状态文本；其他聊天可分别使用下方按钮删除。</p>
+      <div class="xq-actions">
+        <button type="button" class="menu_button" id="xq-hold">⏸ 暂停时间</button>
+        <button type="button" class="menu_button" id="xq-cancel">取消本次等待</button>
+        <button type="button" class="menu_button" id="xq-resume">恢复暂停任务</button>
+        <button type="button" class="menu_button" id="xq-clear">删除当前聊天心理历程</button>
+      </div>
+      <div id="xq-notice" role="status" aria-live="polite"></div>
+      <details open>
+        <summary>当前任务与最近决策</summary>
+        <pre id="xq-status" aria-live="polite"></pre>
+      </details>
+      <p class="xq-hint">这里的心理状态是模型生成的角色模拟描述，不是真实意识活动的证据。仅支持页面运行中的单角色聊天；浏览器关闭后不运行。</p>
+    </div>
+  </div>
+</div>
+

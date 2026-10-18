@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<title>小晴扩展浏览器集成测试</title>
+<link rel="stylesheet" href="../../ui/style.css">
+<style>
+body{background:#171b24;color:#e6e8ef;font:16px/1.5 system-ui;margin:24px auto;padding:0 18px;max-width:720px}h1{font-size:24px}aside{color:#a8b9d9;font-size:14px}.inline-drawer-header{padding:12px;background:#293344;border-radius:8px}.inline-drawer-content{padding:12px}.checkbox_label{display:flex;gap:8px;align-items:center;margin:12px 0}input{background:#222b3b;color:#eee;border:1px solid #515e75;border-radius:5px;padding:7px}input[type=checkbox]{accent-color:#89b6ff}.menu_button{background:#344767;color:#f4f7ff;border:1px solid #647ea7;padding:9px;border-radius:5px;cursor:pointer}.menu_button:disabled{opacity:.4}#chat{padding:12px;background:#252e3c;border-radius:8px}.msg{margin:6px 0;white-space:pre-wrap}
+</style>
+<style>select{background:#222b3b;color:#eee;border:1px solid #515e75;border-radius:5px;padding:7px}</style>
+<h1>Xiaoqing Agent · 扩展集成测试</h1>
+<aside>测试模拟环境，无真实模型连接。此页仅用于验证扩展入口、界面和聊天适配器。</aside>
+<div id="extensions_settings2"></div><div id="chat" aria-label="测试聊天"></div>
+<textarea id="send_textarea" aria-label="测试输入框" style="width:100%;box-sizing:border-box" placeholder="未发送的草稿不会提交给模型"></textarea>
+<script type="module">
+const handlers = new Map();
+const eventSource = {
+    on(type, fn) { if (!handlers.has(type)) handlers.set(type, new Set()); handlers.get(type).add(fn); },
+    removeListener(type, fn) { handlers.get(type)?.delete(fn); },
+    async emit(type, ...args) { for (const fn of [...handlers.get(type) ?? []]) await fn(...args); },
+};
+const names = ['APP_READY','CHAT_CHANGED','MESSAGE_SENT','MESSAGE_RECEIVED','CHARACTER_MESSAGE_RENDERED','GENERATION_STARTED','GENERATION_AFTER_COMMANDS','GENERATION_ENDED','GENERATION_STOPPED','MESSAGE_EDITED','MESSAGE_DELETED','MESSAGE_SWIPED','MESSAGE_UPDATED','CHARACTER_EDITED','MAIN_API_CHANGED','CONNECTION_PROFILE_LOADED','PERSONA_CHANGED'];
+window.testOutputs = []; window.modelCalls = []; window.savedChats = []; window.normalGenerations = 0; window.stopGenerationCalls = 0;
+async function modelRequest(options) {
+    window.modelCalls.push(options);
+    const next = window.testOutputs.shift();
+    if (next === undefined) throw new Error('没有模拟输出');
+    if (next instanceof Error) throw next;
+    return typeof next === 'string' ? next : JSON.stringify(next);
+}
+const ctx = window.testContext = {
+    characterId: 0, groupId: null, chatId: 'browser-smoke-chat', name1: '用户', name2: '小晴', mainApi: 'openai', onlineStatus: 'Connected', streamingProcessor: null,
+    characters: [{ name: '小晴', avatar: 'browser-smoke.png', description: '有些傲娇，内心温柔，喜欢天文学。', personality: '敏感、好奇', data: { description: '完整角色卡' } }],
+    chat: [], chatMetadata: {}, extensionSettings: {}, eventSource,
+    chatCompletionSettings: { chat_completion_source: 'openrouter', openrouter_model: 'deepseek/deepseek-v4.1-flash' },
+    getChatCompletionModel: settings => settings.openrouter_model,
+    eventTypes: Object.fromEntries(names.map(name => [name, name])),
+    getCharacterCardFields() { return { description: this.characters[0].description, persona: '天文社同学' }; },
+    timestampToMoment: value => ({ valueOf: () => new Date(value).getTime() }),
+    unshallowCharacter: async () => {}, saveMetadata: async () => {}, saveSettingsDebounced: () => {},
+    stopGeneration() { window.stopGenerationCalls++; void eventSource.emit('GENERATION_STOPPED'); },
+    async saveChat() { window.savedChats.push(structuredClone({ chat: ctx.chat, metadata: ctx.chatMetadata })); },
+    addOneMessage(message) { const div = document.createElement('div'); div.className = 'msg'; div.textContent = `${message.name}：${message.mes}`; document.querySelector('#chat').append(div); },
+    async generateRaw() { throw new Error('此夹具要求使用原始响应，不能经过聊天清理'); },
+    async generateRawData(options) { const text = await modelRequest(options); return options.jsonSchema ? text : { choices: [{ message: { content: text }, finish_reason: 'stop' }] }; },
+    extractMessageFromData: data => data.choices[0].message.content,
+};
+window.SillyTavern = { getContext: () => ctx };
+window.testSend = async text => {
+    await eventSource.emit('GENERATION_STARTED', 'normal', {}, false);
+    await eventSource.emit('GENERATION_AFTER_COMMANDS', 'normal', {}, false);
+    const message = { name: '用户', is_user: true, is_system: false, mes: text, send_date: new Date().toISOString() };
+    ctx.chat.push(message); ctx.addOneMessage(message); await eventSource.emit('MESSAGE_SENT', ctx.chat.length - 1);
+    let aborted = false;
+    window[manifest.generate_interceptor](ctx.chat, 8192, () => { aborted = true; }, 'normal');
+    if (!aborted) {
+        window.normalGenerations++;
+        const normal = { name: '小晴', is_user: false, is_system: false, mes: '（模拟酒馆的原本即时回复）', send_date: new Date().toISOString() };
+        ctx.chat.push(normal); ctx.addOneMessage(normal); await eventSource.emit('MESSAGE_RECEIVED', ctx.chat.length - 1, 'normal');
+    }
+    await eventSource.emit('GENERATION_ENDED');
+};
+window.testWake = async () => {
+    ctx.chatMetadata.xiaoqing_agent.episode.dueAt = Date.now() - 1;
+    await eventSource.emit('CHAT_CHANGED');
+};
+const manifest = await (await fetch('../../manifest.json')).json();
+const extension = await import('../../' + manifest.js);
+window.disableXiaoqing = extension[manifest.hooks.disable];
+extension[manifest.hooks.activate](); await eventSource.emit('APP_READY');
+</script>
+</html>

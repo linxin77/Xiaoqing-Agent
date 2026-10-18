@@ -1,0 +1,15 @@
+.xiaoqing-panel { --xq-muted: var(--SmartThemeQuoteColor, #a4a9b7); }
+.xiaoqing-panel .xq-hint { font-size: .85em; opacity: .8; line-height: 1.5; }
+.xiaoqing-panel .xq-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; margin: .8rem 0; }
+.xiaoqing-panel .xq-grid label { display: flex; flex-direction: column; min-width: 0; gap: .3rem; font-size: .9em; }
+.xiaoqing-panel .text_pole { width: 100%; min-width: 0; box-sizing: border-box; margin: 0; }
+.xiaoqing-panel .xq-actions { display: flex; gap: .5rem; flex-wrap: wrap; margin: .8rem 0; }
+.xiaoqing-panel button { white-space: normal; height: auto; }
+.xiaoqing-panel details { margin: .7rem 0; padding: .6rem; border: 1px solid var(--SmartThemeBorderColor, #555); border-radius: .4rem; }
+.xiaoqing-panel #xq-status { white-space: pre-wrap; overflow-wrap: anywhere; font-family: inherit; font-size: .88em; line-height: 1.6; max-height: 32rem; overflow-y: auto; }
+.xiaoqing-panel #xq-notice { font-size: .85em; color: var(--xq-muted); }
+.xq-chat-controls { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; width: 100%; padding: .35rem; box-sizing: border-box; }
+.xq-chat-controls[hidden] { display: none; }
+.xq-chat-controls button { height: auto; white-space: normal; margin: 0; }
+.xq-chat-controls span { font-size: .8em; opacity: .8; overflow-wrap: anywhere; }
+@media (max-width: 480px) { .xiaoqing-panel .xq-grid { grid-template-columns: 1fr; } }
