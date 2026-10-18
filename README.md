@@ -1,8 +1,12 @@
 # Xiaoqing Agent · 小晴 v0.5.0 Beta
 
+[简体中文](README.md) | [English](README.en.md)
+
+**让角色在你没有说话时，也能决定接下来做什么。**
+
 为 SillyTavern 单角色聊天加入人格驱动的自主交流与场景行动。角色可以继续说话、做事、等待或结束；决定来自角色卡与当前上下文，程序负责时钟、权限、额度和执行。
 
-A personality-driven proactive interaction extension for SillyTavern. Supports chat and scene narration, fast/slow phases, shared output and request budgets, and a pausable world clock. Public beta; no additional backend or runtime dependencies.
+例如，你在面包店里迟迟没有回应，店员可以继续贴标签、整理货架，再抬头问你是否还需要什么。场景模式会把这些可见动作写进聊天，让人物与场景自然延续；纯聊天模式则专注于主动接话与等待。
 
 **MIT 开源。当前适合作为公开测试版发布。** 功能与发送权限默认关闭；启用后的模型判断可能收费。需要 SillyTavern 1.19.0 或更新版本所提供的接口；独立夹具验证基线为 1.19.0，不宣称已在所有新旧版本或扩展组合中实测。
 
@@ -17,6 +21,8 @@ A personality-driven proactive interaction extension for SillyTavern. Supports c
 ## 安装与更新
 
 发布成 GitHub 仓库后，可在酒馆“扩展 → 安装扩展”中粘贴**本仓库的 Git URL**。本地 ZIP 不能填进 URL 输入框。
+
+仓库根目录应直接包含 `manifest.json`、`index.js`、`README.md` 等文件。网页上传时，请上传插件文件夹里面的内容，避免把外层解压目录也一起上传。
 
 复制安装：
 
@@ -92,7 +98,7 @@ node scripts/check.mjs
 node --test tests/*.test.js
 ```
 
-可选浏览器验证与开发说明见 [CONTRIBUTING.md](CONTRIBUTING.md)，结果与范围见 [docs/TEST_RESULTS.md](docs/TEST_RESULTS.md)。GitHub Actions 配置已提供；未发布到 GitHub 前不能声称远程 CI 已运行通过。
+可选浏览器验证与开发说明见 [CONTRIBUTING.md](CONTRIBUTING.md)，结果与范围见 [docs/TEST_RESULTS.md](docs/TEST_RESULTS.md)。GitHub Actions 配置已提供，远程检查是否通过应以仓库 Actions 页的实际运行结果为准；本地检查不代表远程 CI 已运行。
 
 当前不支持离线后台服务、系统推送、群聊或无限长期记忆。使用最近聊天与已有决策不等于拥有完整世界书触发器，也不能保证上百轮剧情始终一致。其他扩展的消息编辑、正则、生成钩子与不同模型组合需要另外测试。
 
